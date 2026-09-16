@@ -1,739 +1,643 @@
 <!DOCTYPE html>
-
 <html lang="es">
-
-    
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-```
-<meta
-    name="description"
-    content="AutoCore - Sistema autónomo de monitorización, análisis, decisión y aprendizaje."
->
+    <title>NEXVORA | Operator Core</title>
 
-<meta name="theme-color" content="#020617">
+    <meta
+        name="description"
+        content="NEXVORA, sistema inteligente asistido y operado por el usuario."
+    >
 
-<title>AutoCore | Sistema Autónomo</title>
-
-<link rel="stylesheet" href="style.css">
-```
-
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-```
-<!-- ==================================================
-     APLICACIÓN
-=================================================== -->
+    <!-- =====================================================
+         NEXVORA
+         SISTEMA INTELIGENTE ASISTIDO
+         ===================================================== -->
 
-<div id="app">
+    <div id="app">
 
-    <!-- ==================================================
-         CABECERA
-    =================================================== -->
+        <!-- =========================
+             BARRA SUPERIOR
+             ========================= -->
 
-    <header class="topbar">
+        <header class="topbar">
 
-        <div class="brand">
+            <div class="brand">
+                <div class="brand-mark">
+                    NX
+                </div>
 
-            <div class="brand-icon" aria-hidden="true">
-                AC
+                <div class="brand-info">
+                    <h1>NEXVORA</h1>
+                    <span>OPERATOR CORE</span>
+                </div>
             </div>
 
-            <div class="brand-info">
-                <h1>AUTOCORE</h1>
-                <span>Sistema Autónomo v2.0</span>
-            </div>
+            <div class="system-header">
 
-        </div>
-
-        <div class="system-indicator">
-
-            <span
-                id="statusLed"
-                class="status-led activo"
-                aria-hidden="true">
-            </span>
-
-            <div>
-                <small>ESTADO DEL SISTEMA</small>
-                <strong id="system-status">
-                    ACTIVO
-                </strong>
-            </div>
-
-        </div>
-
-    </header>
-
-
-    <!-- ==================================================
-         CUERPO PRINCIPAL
-    =================================================== -->
-
-    <div class="app-layout">
-
-
-        <!-- ==================================================
-             MENÚ LATERAL
-        =================================================== -->
-
-        <aside class="sidebar">
-
-            <div class="sidebar-title">
-                NAVEGACIÓN
-            </div>
-
-            <nav
-                id="mainNavigation"
-                aria-label="Navegación principal">
-
-                <button
-                    class="nav-button activo"
-                    data-section="panel-general"
-                    type="button">
-
-                    <span class="nav-icon">⌂</span>
-                    <span>Panel General</span>
-
-                </button>
-
-
-                <button
-                    class="nav-button"
-                    data-section="estado-actual"
-                    type="button">
-
-                    <span class="nav-icon">◉</span>
-                    <span>Estado Actual</span>
-
-                </button>
-
-
-                <button
-                    class="nav-button"
-                    data-section="registro-eventos"
-                    type="button">
-
-                    <span class="nav-icon">▤</span>
-                    <span>Registro</span>
-
-                </button>
-
-
-                <button
-                    class="nav-button"
-                    data-section="configuracion"
-                    type="button">
-
-                    <span class="nav-icon">⚙</span>
-                    <span>Configuración</span>
-
-                </button>
-
-
-                <button
-                    class="nav-button"
-                    data-section="estadisticas"
-                    type="button">
-
-                    <span class="nav-icon">▥</span>
-                    <span>Estadísticas</span>
-
-                </button>
-
-            </nav>
-
-
-            <!-- ESTADO DEL NÚCLEO -->
-
-            <div class="core-status">
-
-                <div class="core-header">
-                    <span>NÚCLEO AUTÓNOMO</span>
-                    <span
-                        id="coreStatus"
-                        class="core-online">
+                <div class="header-item">
+                    <span class="header-label">CORE</span>
+                    <span id="estadoGeneral" class="status-online">
                         ONLINE
                     </span>
                 </div>
 
-                <div class="core-progress">
-
-                    <div
-                        id="coreProgressBar"
-                        class="core-progress-fill">
-                    </div>
-
+                <div class="header-item">
+                    <span class="header-label">MODO</span>
+                    <span id="modoSistema">
+                        ASISTIDO
+                    </span>
                 </div>
 
-                <small>
-                    Nivel IA:
-                    <strong id="sidebarNivelIA">
-                        1
-                    </strong>
-                </small>
+                <div class="header-item">
+                    <span class="header-label">OPERADOR</span>
+                    <span>
+                        USER
+                    </span>
+                </div>
 
             </div>
 
-        </aside>
+        </header>
 
 
-        <!-- ==================================================
-             CONTENIDO
-        =================================================== -->
+        <!-- =========================
+             ESTRUCTURA PRINCIPAL
+             ========================= -->
 
-        <main
-            id="panel-principal"
-            class="main-content">
+        <div class="app-layout">
 
 
-            <!-- ==================================================
-                 PANEL GENERAL
-            =================================================== -->
+            <!-- =========================
+                 SIDEBAR
+                 ========================= -->
 
-            <section
-                id="panel-general"
-                class="page-section active-section"
-                aria-labelledby="titulo-panel-general">
+            <aside class="sidebar">
 
-                <div class="section-heading">
+                <div class="sidebar-title">
+                    <span>SYSTEM MENU</span>
+                </div>
 
-                    <div>
-                        <span class="section-label">
-                            SISTEMA
-                        </span>
 
-                        <h2 id="titulo-panel-general">
-                            Panel General
-                        </h2>
+                <nav id="mainNavigation">
 
-                        <p>
-                            Vista general del estado operativo de AutoCore.
-                        </p>
+                    <button
+                        class="nav-button active"
+                        data-section="dashboard"
+                    >
+                        <span class="nav-icon">▣</span>
+                        PANEL GENERAL
+                    </button>
+
+                    <button
+                        class="nav-button"
+                        data-section="control"
+                    >
+                        <span class="nav-icon">◉</span>
+                        CENTRO DE CONTROL
+                    </button>
+
+                    <button
+                        class="nav-button"
+                        data-section="estado"
+                    >
+                        <span class="nav-icon">◫</span>
+                        ESTADO ACTUAL
+                    </button>
+
+                    <button
+                        class="nav-button"
+                        data-section="procesos"
+                    >
+                        <span class="nav-icon">▶</span>
+                        PROCESOS
+                    </button>
+
+                    <button
+                        class="nav-button"
+                        data-section="registro"
+                    >
+                        <span class="nav-icon">≡</span>
+                        REGISTRO
+                    </button>
+
+                    <button
+                        class="nav-button"
+                        data-section="configuracion"
+                    >
+                        <span class="nav-icon">⚙</span>
+                        CONFIGURACIÓN
+                    </button>
+
+                    <button
+                        class="nav-button"
+                        data-section="estadisticas"
+                    >
+                        <span class="nav-icon">▥</span>
+                        ESTADÍSTICAS
+                    </button>
+
+                </nav>
+
+
+                <!-- ESTADO DEL CORE -->
+
+                <div class="core-status">
+
+                    <div class="core-status-title">
+                        CORE STATUS
                     </div>
 
-                    <div class="live-indicator">
-                        <span></span>
-                        EN TIEMPO REAL
+                    <div class="status-row">
+                        <span>ENERGÍA</span>
+                        <span id="sidebarEnergia">100%</span>
+                    </div>
+
+                    <div class="status-row">
+                        <span>ESTABILIDAD</span>
+                        <span id="sidebarEstabilidad">100%</span>
+                    </div>
+
+                    <div class="status-row">
+                        <span>IA LEVEL</span>
+                        <span id="sidebarNivelIA">01</span>
+                    </div>
+
+                    <div class="status-indicator">
+                        <span class="led led-green"></span>
+                        SISTEMA OPERATIVO
                     </div>
 
                 </div>
 
-
-                <!-- MÉTRICAS PRINCIPALES -->
-
-                <div class="info-grid">
+            </aside>
 
 
-                    <article class="info-box">
+            <!-- =========================
+                 CONTENIDO PRINCIPAL
+                 ========================= -->
 
-                        <div class="metric-header">
-                            <span>ESTADO</span>
-                            <span class="metric-icon">●</span>
-                        </div>
-
-                        <strong
-                            id="estadoGeneral"
-                            class="metric-value">
-                            ACTIVO
-                        </strong>
-
-                        <small>
-                            Estado operativo
-                        </small>
-
-                    </article>
+            <main class="main-content">
 
 
-                    <article class="info-box">
+                <!-- =================================================
+                     PANEL GENERAL
+                     ================================================= -->
 
-                        <div class="metric-header">
-                            <span>MODO</span>
-                            <span class="metric-icon">◆</span>
-                        </div>
+                <section
+                    id="dashboard"
+                    class="page-section active"
+                >
 
-                        <strong
-                            id="modoSistema"
-                            class="metric-value">
-                            NORMAL
-                        </strong>
-
-                        <small>
-                            Perfil de operación
-                        </small>
-
-                    </article>
-
-
-                    <article class="info-box">
-
-                        <div class="metric-header">
-                            <span>ESTABILIDAD</span>
-                            <span class="metric-icon">◇</span>
-                        </div>
-
-                        <strong
-                            id="estabilidad"
-                            class="metric-value">
-                            100%
-                        </strong>
-
-                        <div class="mini-progress">
-                            <div
-                                id="estabilidadBarra"
-                                class="mini-progress-fill"
-                                style="width:100%">
-                            </div>
-                        </div>
-
-                    </article>
-
-
-                    <article class="info-box">
-
-                        <div class="metric-header">
-                            <span>NIVEL IA</span>
-                            <span class="metric-icon">AI</span>
-                        </div>
-
-                        <strong
-                            id="nivelIA"
-                            class="metric-value">
-                            1
-                        </strong>
-
-                        <small>
-                            Capacidad adaptativa
-                        </small>
-
-                    </article>
-
-                </div>
-
-
-                <!-- ESTADO DEL MOTOR -->
-
-                <div class="dashboard-grid">
-
-
-                    <article class="panel-card engine-card">
-
-                        <div class="card-header">
-
-                            <div>
-                                <span class="section-label">
-                                    MOTOR
-                                </span>
-
-                                <h3>
-                                    Estado operativo
-                                </h3>
-                            </div>
-
-                            <span
-                                id="motorEstado"
-                                class="badge success">
-                                ESTABLE
+                    <div class="section-heading">
+                        <div>
+                            <span class="section-code">
+                                NX-DASHBOARD
                             </span>
 
+                            <h2>PANEL GENERAL</h2>
+
+                            <p>
+                                Supervisión general del núcleo NEXVORA.
+                            </p>
+                        </div>
+
+                        <div class="section-status">
+                            <span class="led led-green"></span>
+                            ONLINE
+                        </div>
+                    </div>
+
+
+                    <!-- MÉTRICAS -->
+
+                    <div class="info-grid">
+
+                        <div class="info-box">
+
+                            <div class="metric-header">
+                                ENERGÍA
+                            </div>
+
+                            <div
+                                id="energiaDashboard"
+                                class="metric-value"
+                            >
+                                100%
+                            </div>
+
                         </div>
 
 
-                        <div class="engine-visual">
+                        <div class="info-box">
 
-                            <div class="engine-circle">
+                            <div class="metric-header">
+                                ESTABILIDAD
+                            </div>
 
-                                <div class="engine-inner">
+                            <div
+                                id="estabilidadDashboard"
+                                class="metric-value"
+                            >
+                                100%
+                            </div>
 
-                                    <strong
-                                        id="enginePercentage">
-                                        100%
+                        </div>
+
+
+                        <div class="info-box">
+
+                            <div class="metric-header">
+                                ERRORES
+                            </div>
+
+                            <div
+                                id="erroresDashboard"
+                                class="metric-value"
+                            >
+                                0
+                            </div>
+
+                        </div>
+
+
+                        <div class="info-box">
+
+                            <div class="metric-header">
+                                TAREAS
+                            </div>
+
+                            <div
+                                id="tareasDashboard"
+                                class="metric-value"
+                            >
+                                0
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ESTADO DEL MOTOR -->
+
+                    <div class="dashboard-grid">
+
+                        <article class="panel-card">
+
+                            <div class="card-header">
+                                <span>CORE ENGINE</span>
+                                <span class="led led-green"></span>
+                            </div>
+
+                            <div class="engine-visual">
+
+                                <div class="engine-circle">
+
+                                    <span class="engine-label">
+                                        NEXVORA
+                                    </span>
+
+                                    <strong id="nivelIA">
+                                        01
                                     </strong>
 
-                                    <span>
-                                        ESTABILIDAD
-                                    </span>
+                                    <small>
+                                        CORE LEVEL
+                                    </small>
 
                                 </div>
 
                             </div>
 
-                        </div>
+                            <div class="engine-state">
+                                <span>ESTADO</span>
 
-
-                        <div class="engine-data">
-
-                            <div>
-                                <span>CPU</span>
-                                <strong id="cpuUso">
-                                    0%
+                                <strong id="estadoSistema">
+                                    ACTIVO
                                 </strong>
                             </div>
 
-                            <div>
-                                <span>ENERGÍA</span>
-                                <strong id="energiaGeneral">
-                                    100%
-                                </strong>
+                        </article>
+
+
+                        <!-- DIAGNÓSTICO -->
+
+                        <article class="panel-card">
+
+                            <div class="card-header">
+                                <span>DIAGNÓSTICO</span>
+                                <span class="led led-green"></span>
                             </div>
 
-                            <div>
-                                <span>TAREAS</span>
-                                <strong id="tareasGeneral">
-                                    0
-                                </strong>
-                            </div>
+                            <div class="diagnostic-content">
 
-                        </div>
-
-                    </article>
-
-
-                    <!-- DIAGNÓSTICO -->
-
-                    <article class="panel-card diagnostic-card">
-
-                        <div class="card-header">
-
-                            <div>
-                                <span class="section-label">
-                                    ANALIZADOR
+                                <span class="diagnostic-label">
+                                    ÚLTIMO ANÁLISIS
                                 </span>
 
-                                <h3>
-                                    Diagnóstico actual
-                                </h3>
+                                <strong id="diagnostico">
+                                    Sistema iniciando...
+                                </strong>
+
+                                <div class="diagnostic-line">
+                                    MODO:
+                                    <span id="modoActual">
+                                        ASISTIDO
+                                    </span>
+                                </div>
+
+                                <div class="diagnostic-line">
+                                    PRIORIDAD:
+                                    <span id="prioridadActual">
+                                        BAJA
+                                    </span>
+                                </div>
+
+                                <div class="diagnostic-line">
+                                    REVISIÓN:
+                                    <span id="ultimaRevision">
+                                        --:--:--
+                                    </span>
+                                </div>
+
                             </div>
 
-                            <span class="diagnostic-pulse"></span>
+                        </article>
 
-                        </div>
+                    </div>
+
+                </section>
 
 
-                        <div class="diagnostic-content">
+                <!-- =================================================
+                     CENTRO DE CONTROL
+                     ================================================= -->
 
-                            <span class="diagnostic-title">
-                                DIAGNÓSTICO
+                <section
+                    id="control"
+                    class="page-section"
+                >
+
+                    <div class="section-heading">
+
+                        <div>
+                            <span class="section-code">
+                                NX-CONTROL
                             </span>
 
-                            <strong id="diagnosticoGeneral">
-                                Funcionamiento normal
-                            </strong>
+                            <h2>CENTRO DE CONTROL</h2>
 
-                            <p id="diagnosticoDescripcion">
-                                El sistema opera dentro de
-                                parámetros normales.
+                            <p>
+                                El operador controla las acciones del sistema.
                             </p>
+                        </div>
+
+                        <div class="operator-badge">
+                            OPERATOR
+                        </div>
+
+                    </div>
+
+
+                    <!-- MODO OPERATIVO -->
+
+                    <article class="panel-card operator-panel">
+
+                        <div class="card-header">
+                            <span>MODO OPERATIVO</span>
+                        </div>
+
+                        <div class="mode-selector">
+
+                            <button
+                                class="mode-button"
+                                data-mode="MANUAL"
+                            >
+                                MANUAL
+                            </button>
+
+                            <button
+                                class="mode-button active"
+                                data-mode="ASISTIDO"
+                            >
+                                ASISTIDO
+                            </button>
+
+                            <button
+                                class="mode-button"
+                                data-mode="AUTOMATICO"
+                            >
+                                AUTOMÁTICO
+                            </button>
+
+                            <button
+                                class="mode-button"
+                                data-mode="SEGURO"
+                            >
+                                SEGURO
+                            </button>
+
+                            <button
+                                class="mode-button"
+                                data-mode="EMERGENCIA"
+                            >
+                                EMERGENCIA
+                            </button>
 
                         </div>
 
-
-                        <div class="priority">
-
-                            <span>
-                                PRIORIDAD
-                            </span>
-
-                            <strong id="prioridadGeneral">
-                                BAJA
-                            </strong>
-
+                        <div class="mode-description">
+                            NEXVORA analiza y recomienda.
+                            El operador autoriza las acciones.
                         </div>
 
                     </article>
 
-                </div>
+
+                    <!-- ACCIONES -->
+
+                    <div class="dashboard-grid">
+
+                        <article class="panel-card">
+
+                            <div class="card-header">
+                                <span>ACCIONES DEL OPERADOR</span>
+                            </div>
+
+                            <div class="control-actions">
+
+                                <button
+                                    id="btnDiagnostico"
+                                    class="control-button"
+                                >
+                                    <span>◉</span>
+                                    EJECUTAR DIAGNÓSTICO
+                                </button>
+
+                                <button
+                                    id="btnAnalizar"
+                                    class="control-button"
+                                >
+                                    <span>⌁</span>
+                                    ANALIZAR SISTEMA
+                                </button>
+
+                                <button
+                                    id="btnOptimizar"
+                                    class="control-button"
+                                >
+                                    <span>◇</span>
+                                    SOLICITAR OPTIMIZACIÓN
+                                </button>
+
+                                <button
+                                    id="btnNuevaTarea"
+                                    class="control-button"
+                                >
+                                    <span>+</span>
+                                    CREAR TAREA
+                                </button>
+
+                                <button
+                                    id="btnDetener"
+                                    class="control-button danger"
+                                >
+                                    <span>■</span>
+                                    DETENER PROCESOS
+                                </button>
+
+                            </div>
+
+                        </article>
 
 
-                <!-- ACTIVIDAD RECIENTE -->
+                        <!-- ACCIÓN PENDIENTE -->
 
-                <article class="panel-card activity-card">
+                        <article class="panel-card">
 
-                    <div class="card-header">
+                            <div class="card-header">
+                                <span>ACCIÓN PENDIENTE</span>
 
-                        <div>
-                            <span class="section-label">
-                                MONITOR
+                                <span
+                                    id="accionPendienteEstado"
+                                    class="led led-yellow"
+                                ></span>
+                            </div>
+
+                            <div
+                                id="accionPendiente"
+                                class="pending-action"
+                            >
+
+                                <div class="pending-empty">
+                                    No existen acciones pendientes.
+                                </div>
+
+                            </div>
+
+                            <div class="authorization-actions">
+
+                                <button
+                                    id="btnAutorizar"
+                                    class="control-button success"
+                                    disabled
+                                >
+                                    ✓ AUTORIZAR
+                                </button>
+
+                                <button
+                                    id="btnCancelar"
+                                    class="control-button danger"
+                                    disabled
+                                >
+                                    ✕ CANCELAR
+                                </button>
+
+                            </div>
+
+                        </article>
+
+                    </div>
+
+
+                    <!-- CONSOLA DEL OPERADOR -->
+
+                    <article class="panel-card terminal-panel">
+
+                        <div class="card-header">
+                            <span>OPERATOR CONSOLE</span>
+
+                            <span class="terminal-status">
+                                READY
                             </span>
-
-                            <h3>
-                                Actividad reciente
-                            </h3>
                         </div>
 
-                        <button
-                            class="text-button"
-                            data-section="registro-eventos"
-                            type="button">
-
-                            Ver registro
-
-                        </button>
-
-                    </div>
-
-
-                    <div
-                        id="recentActivity"
-                        class="activity-list">
-
-                        <div class="empty-state">
-                            Esperando actividad del sistema...
-                        </div>
-
-                    </div>
-
-                </article>
-
-            </section>
-
-
-            <!-- ==================================================
-                 ESTADO ACTUAL
-            =================================================== -->
-
-            <section
-                id="estado-actual"
-                class="page-section"
-                aria-labelledby="titulo-estado">
-
-                <div class="section-heading">
-
-                    <div>
-                        <span class="section-label">
-                            MONITOREO
-                        </span>
-
-                        <h2 id="titulo-estado">
-                            Estado Actual
-                        </h2>
-
-                        <p>
-                            Parámetros internos del sistema.
-                        </p>
-                    </div>
-
-                </div>
-
-
-                <!-- INDICADORES -->
-
-                <article class="panel-card">
-
-                    <div class="indicator-header">
-
-                        <h3>
-                            Indicadores del sistema
-                        </h3>
-
-                        <span id="monitorEstado">
-                            MONITOREANDO
-                        </span>
-
-                    </div>
-
-
-                    <div class="indicadores">
-
-                        <div class="indicator">
-
-                            <span class="led activo"></span>
+                        <div
+                            id="terminalOutput"
+                            class="terminal-output"
+                        >
 
                             <div>
-                                <strong>
-                                    Sistema
-                                </strong>
+                                [NEXVORA] CORE ONLINE
+                            </div>
 
-                                <small>
-                                    Operativo
-                                </small>
+                            <div>
+                                [NEXVORA] MODO ASISTIDO
+                            </div>
+
+                            <div>
+                                [NEXVORA] ESPERANDO INSTRUCCIÓN DEL OPERADOR...
                             </div>
 
                         </div>
 
+                        <form
+                            id="terminalForm"
+                            class="terminal-input"
+                        >
 
-                        <div class="indicator">
+                            <span>&gt;</span>
 
-                            <span class="led monitoreo"></span>
+                            <input
+                                type="text"
+                                id="terminalCommand"
+                                placeholder="Escriba una orden..."
+                                autocomplete="off"
+                            >
 
-                            <div>
-                                <strong>
-                                    Monitor
-                                </strong>
+                            <button type="submit">
+                                ENTER
+                            </button>
 
-                                <small>
-                                    Activo
-                                </small>
-                            </div>
+                        </form>
 
-                        </div>
+                    </article>
 
-
-                        <div class="indicator">
-
-                            <span class="led aprendizaje"></span>
-
-                            <div>
-                                <strong>
-                                    Aprendizaje
-                                </strong>
-
-                                <small id="aprendizajeEstado">
-                                    Disponible
-                                </small>
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                </article>
+                </section>
 
 
-                <!-- DATOS -->
+                <!-- =================================================
+                     ESTADO ACTUAL
+                     ================================================= -->
 
-                <article class="panel-card">
+                <section
+                    id="estado"
+                    class="page-section"
+                >
 
-                    <div class="card-header">
+                    <div class="section-heading">
 
                         <div>
-                            <span class="section-label">
-                                TELEMETRÍA
+                            <span class="section-code">
+                                NX-STATUS
                             </span>
 
-                            <h3>
-                                Parámetros internos
-                            </h3>
-                        </div>
-
-                    </div>
-
-
-                    <div class="estado-grid">
-
-
-                        <div class="estado-item">
-                            <span>ESTADO</span>
-                            <strong id="estadoSistema">
-                                ACTIVO
-                            </strong>
-                        </div>
-
-
-                        <div class="estado-item">
-                            <span>MODO</span>
-                            <strong id="modoActual">
-                                NORMAL
-                            </strong>
-                        </div>
-
-
-                        <div class="estado-item">
-                            <span>ENERGÍA</span>
-                            <strong id="energiaActual">
-                                100%
-                            </strong>
-                        </div>
-
-
-                        <div class="estado-item">
-                            <span>ESTABILIDAD</span>
-                            <strong id="estabilidadActual">
-                                100%
-                            </strong>
-                        </div>
-
-
-                        <div class="estado-item">
-                            <span>CPU</span>
-                            <strong id="cpuActual">
-                                0%
-                            </strong>
-                        </div>
-
-
-                        <div class="estado-item">
-                            <span>ERRORES</span>
-                            <strong id="erroresActuales">
-                                0
-                            </strong>
-                        </div>
-
-
-                        <div class="estado-item">
-                            <span>TAREAS</span>
-                            <strong id="tareasActuales">
-                                0
-                            </strong>
-                        </div>
-
-
-                        <div class="estado-item">
-                            <span>PRIORIDAD</span>
-                            <strong id="prioridadActual">
-                                BAJA
-                            </strong>
-                        </div>
-
-
-                        <div class="estado-item">
-                            <span>NIVEL IA</span>
-                            <strong id="nivelIAActual">
-                                1
-                            </strong>
-                        </div>
-
-
-                        <div class="estado-item">
-                            <span>ÚLTIMA REVISIÓN</span>
-                            <strong id="ultimaRevision">
-                                --:--:--
-                            </strong>
-                        </div>
-
-                    </div>
-
-                </article>
-
-
-                <!-- ACCIÓN PENDIENTE -->
-
-                <article class="panel-card action-card">
-
-                    <div class="card-header">
-
-                        <div>
-                            <span class="section-label">
-                                DECISOR
-                            </span>
-
-                            <h3>
-                                Acción pendiente
-                            </h3>
-                        </div>
-
-                    </div>
-
-                    <div
-                        id="accionPendiente"
-                        class="pending-action">
-
-                        SIN ACCIÓN PENDIENTE
-
-                    </div>
-
-                </article>
-
-            </section>
-
-
-            <!-- ==================================================
-                 REGISTRO DE EVENTOS
-            =================================================== -->
-
-            <section
-                id="registro-e
+                            <h2>ESTADO ACTUAL</
