@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+```
+<meta
+    name="description"
+    content="AutoCore - Sistema autónomo de monitorización, análisis, decisión y aprendizaje."
+>
+
+<meta name="theme-color" content="#020617">
+
+<title>AutoCore | Sistema Autónomo</title>
+
+<link rel="stylesheet" href="style.css">
+```
+
+</head>
+
+<body>
+
+```
+<!-- ==================================================
+     APLICACIÓN
+=================================================== -->
+
+<div id="app">
+
+    <!-- ==================================================
+         CABECERA
+    =================================================== -->
+
+    <header class="topbar">
+
+        <div class="brand">
+
+            <div class="brand-icon" aria-hidden="true">
+                AC
+            </div>
+
+            <div class="brand-info">
+                <h1>AUTOCORE</h1>
+                <span>Sistema Autónomo v2.0</span>
+            </div>
+
+        </div>
+
+        <div class="system-indicator">
+
+            <span
+                id="statusLed"
+                class="status-led activo"
+                aria-hidden="true">
+            </span>
+
+            <div>
+                <small>ESTADO DEL SISTEMA</small>
+                <strong id="system-status">
+                    ACTIVO
+                </strong>
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <!-- ==================================================
+         CUERPO PRINCIPAL
+    =================================================== -->
+
+    <div class="app-layout">
+
+
+        <!-- ==================================================
+             MENÚ LATERAL
+        =================================================== -->
+
+        <aside class="sidebar">
+
+            <div class="sidebar-title">
+                NAVEGACIÓN
+            </div>
+
+            <nav
+                id="mainNavigation"
+                aria-label="Navegación principal">
+
+                <button
+                    class="nav-button activo"
+                    data-section="panel-general"
+                    type="button">
+
+                    <span class="nav-icon">⌂</span>
+                    <span>Panel General</span>
+
+                </button>
+
+
+                <button
+                    class="nav-button"
+                    data-section="estado-actual"
+                    type="button">
+
+                    <span class="nav-icon">◉</span>
+                    <span>Estado Actual</span>
+
+                </button>
+
+
+                <button
+                    class="nav-button"
+                    data-section="registro-eventos"
+                    type="button">
+
+                    <span class="nav-icon">▤</span>
+                    <span>Registro</span>
+
+                </button>
+
+
+                <button
+                    class="nav-button"
+                    data-section="configuracion"
+                    type="button">
+
+                    <span class="nav-icon">⚙</span>
+                    <span>Configuración</span>
+
+                </button>
+
+
+                <button
+                    class="nav-button"
+                    data-section="estadisticas"
+                    type="button">
+
+                    <span class="nav-icon">▥</span>
+                    <span>Estadísticas</span>
+
+                </button>
+
+            </nav>
+
+
+            <!-- ESTADO DEL NÚCLEO -->
+
+            <div class="core-status">
+
+                <div class="core-header">
+                    <span>NÚCLEO AUTÓNOMO</span>
+                    <span
+                        id="coreStatus"
+                        class="core-online">
+                        ONLINE
+                    </span>
+                </div>
+
+                <div class="core-progress">
+
+                    <div
+                        id="coreProgressBar"
+                        class="core-progress-fill">
+                    </div>
+
+                </div>
+
+                <small>
+                    Nivel IA:
+                    <strong id="sidebarNivelIA">
+                        1
+                    </strong>
+                </small>
+
+            </div>
+
+        </aside>
+
+
+        <!-- ==================================================
+             CONTENIDO
+        =================================================== -->
+
+        <main
+            id="panel-principal"
+            class="main-content">
+
+
+            <!-- ==================================================
+                 PANEL GENERAL
+            =================================================== -->
+
+            <section
+                id="panel-general"
+                class="page-section active-section"
+                aria-labelledby="titulo-panel-general">
+
+                <div class="section-heading">
+
+                    <div>
+                        <span class="section-label">
+                            SISTEMA
+                        </span>
+
+                        <h2 id="titulo-panel-general">
+                            Panel General
+                        </h2>
+
+                        <p>
+                            Vista general del estado operativo de AutoCore.
+                        </p>
+                    </div>
+
+                    <div class="live-indicator">
+                        <span></span>
+                        EN TIEMPO REAL
+                    </div>
+
+                </div>
+
+
+                <!-- MÉTRICAS PRINCIPALES -->
+
+                <div class="info-grid">
+
+
+                    <article class="info-box">
+
+                        <div class="metric-header">
+                            <span>ESTADO</span>
+                            <span class="metric-icon">●</span>
+                        </div>
+
+                        <strong
+                            id="estadoGeneral"
+                            class="metric-value">
+                            ACTIVO
+                        </strong>
+
+                        <small>
+                            Estado operativo
+                        </small>
+
+                    </article>
+
+
+                    <article class="info-box">
+
+                        <div class="metric-header">
+                            <span>MODO</span>
+                            <span class="metric-icon">◆</span>
+                        </div>
+
+                        <strong
+                            id="modoSistema"
+                            class="metric-value">
+                            NORMAL
+                        </strong>
+
+                        <small>
+                            Perfil de operación
+                        </small>
+
+                    </article>
+
+
+                    <article class="info-box">
+
+                        <div class="metric-header">
+                            <span>ESTABILIDAD</span>
+                            <span class="metric-icon">◇</span>
+                        </div>
+
+                        <strong
+                            id="estabilidad"
+                            class="metric-value">
+                            100%
+                        </strong>
+
+                        <div class="mini-progress">
+                            <div
+                                id="estabilidadBarra"
+                                class="mini-progress-fill"
+                                style="width:100%">
+                            </div>
+                        </div>
+
+                    </article>
+
+
+                    <article class="info-box">
+
+                        <div class="metric-header">
+                            <span>NIVEL IA</span>
+                            <span class="metric-icon">AI</span>
+                        </div>
+
+                        <strong
+                            id="nivelIA"
+                            class="metric-value">
+                            1
+                        </strong>
+
+                        <small>
+                            Capacidad adaptativa
+                        </small>
+
+                    </article>
+
+                </div>
+
+
+                <!-- ESTADO DEL MOTOR -->
+
+                <div class="dashboard-grid">
+
+
+                    <article class="panel-card engine-card">
+
+                        <div class="card-header">
+
+                            <div>
+                                <span class="section-label">
+                                    MOTOR
+                                </span>
+
+                                <h3>
+                                    Estado operativo
+                                </h3>
+                            </div>
+
+                            <span
+                                id="motorEstado"
+                                class="badge success">
+                                ESTABLE
+                            </span>
+
+                        </div>
+
+
+                        <div class="engine-visual">
+
+                            <div class="engine-circle">
+
+                                <div class="engine-inner">
+
+                                    <strong
+                                        id="enginePercentage">
+                                        100%
+                                    </strong>
+
+                                    <span>
+                                        ESTABILIDAD
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="engine-data">
+
+                            <div>
+                                <span>CPU</span>
+                                <strong id="cpuUso">
+                                    0%
+                                </strong>
+                            </div>
+
+                            <div>
+                                <span>ENERGÍA</span>
+                                <strong id="energiaGeneral">
+                                    100%
+                                </strong>
+                            </div>
+
+                            <div>
+                                <span>TAREAS</span>
+                                <strong id="tareasGeneral">
+                                    0
+                                </strong>
+                            </div>
+
+                        </div>
+
+                    </article>
+
+
+                    <!-- DIAGNÓSTICO -->
+
+                    <article class="panel-card diagnostic-card">
+
+                        <div class="card-header">
+
+                            <div>
+                                <span class="section-label">
+                                    ANALIZADOR
+                                </span>
+
+                                <h3>
+                                    Diagnóstico actual
+                                </h3>
+                            </div>
+
+                            <span class="diagnostic-pulse"></span>
+
+                        </div>
+
+
+                        <div class="diagnostic-content">
+
+                            <span class="diagnostic-title">
+                                DIAGNÓSTICO
+                            </span>
+
+                            <strong id="diagnosticoGeneral">
+                                Funcionamiento normal
+                            </strong>
+
+                            <p id="diagnosticoDescripcion">
+                                El sistema opera dentro de
+                                parámetros normales.
+                            </p>
+
+                        </div>
+
+
+                        <div class="priority">
+
+                            <span>
+                                PRIORIDAD
+                            </span>
+
+                            <strong id="prioridadGeneral">
+                                BAJA
+                            </strong>
+
+                        </div>
+
+                    </article>
+
+                </div>
+
+
+                <!-- ACTIVIDAD RECIENTE -->
+
+                <article class="panel-card activity-card">
+
+                    <div class="card-header">
+
+                        <div>
+                            <span class="section-label">
+                                MONITOR
+                            </span>
+
+                            <h3>
+                                Actividad reciente
+                            </h3>
+                        </div>
+
+                        <button
+                            class="text-button"
+                            data-section="registro-eventos"
+                            type="button">
+
+                            Ver registro
+
+                        </button>
+
+                    </div>
+
+
+                    <div
+                        id="recentActivity"
+                        class="activity-list">
+
+                        <div class="empty-state">
+                            Esperando actividad del sistema...
+                        </div>
+
+                    </div>
+
+                </article>
+
+            </section>
+
+
+            <!-- ==================================================
+                 ESTADO ACTUAL
+            =================================================== -->
+
+            <section
+                id="estado-actual"
+                class="page-section"
+                aria-labelledby="titulo-estado">
+
+                <div class="section-heading">
+
+                    <div>
+                        <span class="section-label">
+                            MONITOREO
+                        </span>
+
+                        <h2 id="titulo-estado">
+                            Estado Actual
+                        </h2>
+
+                        <p>
+                            Parámetros internos del sistema.
+                        </p>
+                    </div>
+
+                </div>
+
+
+                <!-- INDICADORES -->
+
+                <article class="panel-card">
+
+                    <div class="indicator-header">
+
+                        <h3>
+                            Indicadores del sistema
+                        </h3>
+
+                        <span id="monitorEstado">
+                            MONITOREANDO
+                        </span>
+
+                    </div>
+
+
+                    <div class="indicadores">
+
+                        <div class="indicator">
+
+                            <span class="led activo"></span>
+
+                            <div>
+                                <strong>
+                                    Sistema
+                                </strong>
+
+                                <small>
+                                    Operativo
+                                </small>
+                            </div>
+
+                        </div>
+
+
+                        <div class="indicator">
+
+                            <span class="led monitoreo"></span>
+
+                            <div>
+                                <strong>
+                                    Monitor
+                                </strong>
+
+                                <small>
+                                    Activo
+                                </small>
+                            </div>
+
+                        </div>
+
+
+                        <div class="indicator">
+
+                            <span class="led aprendizaje"></span>
+
+                            <div>
+                                <strong>
+                                    Aprendizaje
+                                </strong>
+
+                                <small id="aprendizajeEstado">
+                                    Disponible
+                                </small>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </article>
+
+
+                <!-- DATOS -->
+
+                <article class="panel-card">
+
+                    <div class="card-header">
+
+                        <div>
+                            <span class="section-label">
+                                TELEMETRÍA
+                            </span>
+
+                            <h3>
+                                Parámetros internos
+                            </h3>
+                        </div>
+
+                    </div>
+
+
+                    <div class="estado-grid">
+
+
+                        <div class="estado-item">
+                            <span>ESTADO</span>
+                            <strong id="estadoSistema">
+                                ACTIVO
+                            </strong>
+                        </div>
+
+
+                        <div class="estado-item">
+                            <span>MODO</span>
+                            <strong id="modoActual">
+                                NORMAL
+                            </strong>
+                        </div>
+
+
+                        <div class="estado-item">
+                            <span>ENERGÍA</span>
+                            <strong id="energiaActual">
+                                100%
+                            </strong>
+                        </div>
+
+
+                        <div class="estado-item">
+                            <span>ESTABILIDAD</span>
+                            <strong id="estabilidadActual">
+                                100%
+                            </strong>
+                        </div>
+
+
+                        <div class="estado-item">
+                            <span>CPU</span>
+                            <strong id="cpuActual">
+                                0%
+                            </strong>
+                        </div>
+
+
+                        <div class="estado-item">
+                            <span>ERRORES</span>
+                            <strong id="erroresActuales">
+                                0
+                            </strong>
+                        </div>
+
+
+                        <div class="estado-item">
+                            <span>TAREAS</span>
+                            <strong id="tareasActuales">
+                                0
+                            </strong>
+                        </div>
+
+
+                        <div class="estado-item">
+                            <span>PRIORIDAD</span>
+                            <strong id="prioridadActual">
+                                BAJA
+                            </strong>
+                        </div>
+
+
+                        <div class="estado-item">
+                            <span>NIVEL IA</span>
+                            <strong id="nivelIAActual">
+                                1
+                            </strong>
+                        </div>
+
+
+                        <div class="estado-item">
+                            <span>ÚLTIMA REVISIÓN</span>
+                            <strong id="ultimaRevision">
+                                --:--:--
+                            </strong>
+                        </div>
+
+                    </div>
+
+                </article>
+
+
+                <!-- ACCIÓN PENDIENTE -->
+
+                <article class="panel-card action-card">
+
+                    <div class="card-header">
+
+                        <div>
+                            <span class="section-label">
+                                DECISOR
+                            </span>
+
+                            <h3>
+                                Acción pendiente
+                            </h3>
+                        </div>
+
+                    </div>
+
+                    <div
+                        id="accionPendiente"
+                        class="pending-action">
+
+                        SIN ACCIÓN PENDIENTE
+
+                    </div>
+
+                </article>
+
+            </section>
+
+
+            <!-- ==================================================
+                 REGISTRO DE EVENTOS
+            =================================================== -->
+
+            <section
+                id="registro-e
