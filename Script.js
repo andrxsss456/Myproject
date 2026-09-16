@@ -1,5 +1,6 @@
 "use strict";
 
+
 /* ============================================================
 AUTOCORE V2
 Núcleo de monitorización, análisis, decisión y aprendizaje
