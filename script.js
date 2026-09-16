@@ -1,1627 +1,1118 @@
+/* ============================================================
+   NEXVORA CORE
+   Motor principal del sistema
+   Arquitectura: Usuario → NEXVORA → Autorización → Acción
+   ============================================================ */
+
 "use strict";
 
-
 /* ============================================================
-AUTOCORE V2
-Núcleo de monitorización, análisis, decisión y aprendizaje
-============================================================ */
-
-/* ============================================================
-CONFIGURACIÓN
-============================================================ */
-
-const CONFIG = {
-
-```
-frecuenciaRevision: 5000,
-
-capacidadMemoria: 1000,
-
-maxEventosVisibles: 100,
-
-intervaloTiempo: 1000,
-
-probabilidadError: 0.08,
-
-energiaMinima: 0,
-
-energiaMaxima: 100
-```
-
-};
-
-/* ============================================================
-ESTADO PRINCIPAL DEL SISTEMA
-============================================================ */
+   ESTADO PRINCIPAL
+   ============================================================ */
 
 const sistema = {
+    estado: "ACTIVO",
+    modo: "ASISTIDO",
 
-```
-estado: "ACTIVO",
+    energia: 100,
+    estabilidad: 100,
+    errores: 0,
+    tareas: 0,
 
-modo: "NORMAL",
+    prioridad: "BAJA",
+    nivelIA: 1,
 
-energia: 100,
+    memoriaUso: 0,
+    cpuUso: 0,
 
-estabilidad: 100,
+    ultimaRevision: "--:--:--",
+    diagnostico: "Sistema iniciando...",
 
-errores: 0,
-
-tareas: 0,
-
-prioridad: "BAJA",
-
-nivelIA: 1,
-
-memoriaUso: 0,
-
-cpuUso: 8,
-
-ultimaRevision: "--:--:--",
-
-diagnostico: "Inicializando...",
-
-accionPendiente: null,
-
-inicio: Date.now(),
-
-ciclos: 0,
-
-aprendizajeActivo: true,
-
-modoSeguro: false
-```
-
+    accionPendiente: null
 };
 
+
 /* ============================================================
-ESTADÍSTICAS
-============================================================ */
+   CONFIGURACIÓN
+   ============================================================ */
+
+const configuracion = {
+
+    inicioAutomatico: true,
+    guardadoAutomatico: true,
+
+    frecuenciaRevision: 5,
+    capacidadMemoria: 100,
+
+    aprendizajeActivo: true,
+
+    tema: "oscuro",
+    modoSeguro: false,
+
+    permisos: {
+        diagnostico: true,
+        optimizacion: true,
+        procesos: true,
+        configuracion: false,
+        memoria: false
+    }
+};
+
+
+/* ============================================================
+   ESTADÍSTICAS
+   ============================================================ */
 
 const estadisticas = {
 
-```
-tiempoActivo: 0,
+    tiempoActivo: 0,
+    revisiones: 0,
+    decisiones: 0,
+    erroresDetectados: 0,
+    correcciones: 0,
+    aprendizajes: 0,
 
-revisiones: 0,
-
-decisiones: 0,
-
-erroresDetectados: 0,
-
-correcciones: 0,
-
-aprendizajes: 0,
-
-tareasCompletadas: 0
-```
-
+    tareasCompletadas: 0,
+    accionesEjecutadas: 0,
+    procesosEjecutados: 0,
+    cambiosRealizados: 0
 };
 
-/* ============================================================
-MEMORIA
-============================================================ */
-
-const memoria = {
-
-```
-eventos: [],
-
-decisiones: [],
-
-aprendizajes: [],
-
-historialEstados: [],
-
-tareasCompletadas: 0
-```
-
-};
 
 /* ============================================================
-CONTROL DE INTERVALOS
-============================================================ */
+   VARIABLES DEL MOTOR
+   ============================================================ */
 
-let cicloIntervalo = null;
+let intervaloPrincipal = null;
+let intervaloTiempo = null;
 
-let relojIntervalo = null;
+let sesionActual = null;
+
+let procesos = [];
+let tareas = [];
+
+let terminalHistorial = [];
+
 
 /* ============================================================
-UTILIDADES
-============================================================ */
+   REFERENCIAS DOM
+   ============================================================ */
 
-function obtenerHora() {
+const $ = (id) => document.getElementById(id);
 
-```
-return new Date().toLocaleTimeString("es-CO");
-```
-
-}
-
-function limitar(valor, minimo, maximo) {
-
-```
-return Math.min(
-    Math.max(valor, minimo),
-    maximo
-);
-```
-
-}
-
-function obtenerElemento(id) {
-
-```
-return document.getElementById(id);
-```
-
-}
 
 /* ============================================================
-REGISTRO DE EVENTOS
-============================================================ */
+   INICIALIZACIÓN
+   ============================================================ */
 
-function registrar(tipo, mensaje) {
-
-```
-const evento = {
-
-    id: Date.now() + Math.random(),
-
-    hora: obtenerHora(),
-
-    tipo: tipo,
-
-    mensaje: mensaje
-
-};
-
-memoria.eventos.push(evento);
+document.addEventListener("DOMContentLoaded", iniciarNexvora);
 
 
-/* Limitar memoria */
+function iniciarNexvora() {
 
-if (
-    memoria.eventos.length >
-    CONFIG.capacidadMemoria
-) {
+    cargarDatosGuardados();
 
-    memoria.eventos.shift();
+    configurarNavegacion();
 
+    configurarModos();
+
+    configurarControles();
+
+    configurarTerminal();
+
+    configurarConfiguracion();
+
+    iniciarSesion();
+
+    actualizarInterfaz();
+
+    escribirTerminal(
+        "[NEXVORA] CORE ONLINE",
+        "system"
+    );
+
+    escribirTerminal(
+        "[NEXVORA] MODO " + sistema.modo,
+        "system"
+    );
+
+    escribirTerminal(
+        "[NEXVORA] ESPERANDO INSTRUCCIÓN DEL OPERADOR...",
+        "system"
+    );
+
+    registrarEvento(
+        "SYSTEM",
+        "NEXVORA iniciado correctamente."
+    );
+
+    iniciarReloj();
+
+    if (configuracion.inicioAutomatico) {
+        iniciarMotor();
+    }
 }
 
 
-actualizarRegistroUI();
-```
+/* ============================================================
+   NAVEGACIÓN
+   ============================================================ */
+
+function configurarNavegacion() {
+
+    const botones = document.querySelectorAll(".nav-button");
+
+    botones.forEach((boton) => {
+
+        boton.addEventListener("click", () => {
+
+            const destino = boton.dataset.section;
+
+            document
+                .querySelectorAll(".nav-button")
+                .forEach(btn => btn.classList.remove("active"));
+
+            document
+                .querySelectorAll(".page-section")
+                .forEach(section => section.classList.remove("active"));
+
+            boton.classList.add("active");
+
+            const seccion = $(destino);
+
+            if (seccion) {
+                seccion.classList.add("active");
+            }
+
+        });
+
+    });
+}
+
+
+/* ============================================================
+   MODOS OPERATIVOS
+   ============================================================ */
+
+function configurarModos() {
+
+    const botones = document.querySelectorAll(".mode-button");
+
+    botones.forEach((boton) => {
+
+        boton.addEventListener("click", () => {
+
+            const nuevoModo = boton.dataset.mode;
+
+            cambiarModo(nuevoModo);
+
+        });
+
+    });
+}
+
+
+function cambiarModo(nuevoModo) {
+
+    const modosPermitidos = [
+        "MANUAL",
+        "ASISTIDO",
+        "AUTOMATICO",
+        "SEGURO",
+        "EMERGENCIA"
+    ];
+
+    if (!modosPermitidos.includes(nuevoModo)) {
+        return;
+    }
+
+    const anterior = sistema.modo;
+
+    sistema.modo = nuevoModo;
+
+    configuracion.modoSeguro =
+        nuevoModo === "SEGURO";
+
+
+    document
+        .querySelectorAll(".mode-button")
+        .forEach(btn => {
+
+            btn.classList.toggle(
+                "active",
+                btn.dataset.mode === nuevoModo
+            );
+
+        });
+
+
+    const descripcion = document.querySelector(".mode-description");
+
+    if (descripcion) {
+
+        const mensajes = {
+
+            MANUAL:
+                "NEXVORA espera instrucciones directas del operador.",
+
+            ASISTIDO:
+                "NEXVORA analiza y recomienda. El operador autoriza las acciones.",
+
+            AUTOMATICO:
+                "NEXVORA puede ejecutar acciones previamente autorizadas.",
+
+            SEGURO:
+                "Las acciones sensibles requieren autorización del operador.",
+
+            EMERGENCIA:
+                "Procesos limitados. Prioridad máxima a la estabilización."
+        };
+
+        descripcion.textContent =
+            mensajes[nuevoModo] || "";
+    }
+
+
+    registrarCambio(
+        "modo",
+        anterior,
+        nuevoModo,
+        "USUARIO"
+    );
+
+    registrarEvento(
+        "MODE",
+        `Modo cambiado: ${anterior} → ${nuevoModo}`
+    );
+
+    escribirTerminal(
+        `[NEXVORA] MODO CAMBIADO A ${nuevoModo}`,
+        "system"
+    );
+
+    actualizarInterfaz();
+}
+
+
+/* ============================================================
+   CONTROLES PRINCIPALES
+   ============================================================ */
+
+function configurarControles() {
+
+    if ($("btnDiagnostico")) {
+
+        $("btnDiagnostico").addEventListener(
+            "click",
+            () => solicitarAccion("DIAGNOSTICO")
+        );
+
+    }
+
+
+    if ($("btnAnalizar")) {
+
+        $("btnAnalizar").addEventListener(
+            "click",
+            () => analizarSistema(true)
+        );
+
+    }
+
+
+    if ($("btnOptimizar")) {
+
+        $("btnOptimizar").addEventListener(
+            "click",
+            () => solicitarAccion("OPTIMIZACION")
+        );
+
+    }
+
+
+    if ($("btnNuevaTarea")) {
+
+        $("btnNuevaTarea").addEventListener(
+            "click",
+            crearTareaDesdeUsuario
+        );
+
+    }
+
+
+    if ($("btnDetener")) {
+
+        $("btnDetener").addEventListener(
+            "click",
+            detenerProcesos
+        );
+
+    }
+
+
+    if ($("btnAutorizar")) {
+
+        $("btnAutorizar").addEventListener(
+            "click",
+            autorizarAccion
+        );
+
+    }
+
+
+    if ($("btnCancelar")) {
+
+        $("btnCancelar").addEventListener(
+            "click",
+            cancelarAccion
+        );
+
+    }
+
+
+    if ($("btnCrearProceso")) {
+
+        $("btnCrearProceso").addEventListener(
+            "click",
+            abrirModalProceso
+        );
+
+    }
+
+
+    if ($("closeProcessModal")) {
+
+        $("closeProcessModal").addEventListener(
+            "click",
+            cerrarModalProceso
+        );
+
+    }
+
+
+    if ($("cancelProcess")) {
+
+        $("cancelProcess").addEventListener(
+            "click",
+            cerrarModalProceso
+        );
+
+    }
+
+
+    if ($("processForm")) {
+
+        $("processForm").addEventListener(
+            "submit",
+            crearProceso
+        );
+
+    }
+
+
+    if ($("limpiarLog")) {
+
+        $("limpiarLog").addEventListener(
+            "click",
+            limpiarVistaLog
+        );
+
+    }
+}
+
+
+/* ============================================================
+   MOTOR PRINCIPAL
+   ============================================================ */
+
+function iniciarMotor() {
+
+    detenerMotor();
+
+    const segundos = Math.max(
+        1,
+        Number(configuracion.frecuenciaRevision) || 5
+    );
+
+
+    intervaloPrincipal = setInterval(
+        cicloPrincipal,
+        segundos * 1000
+    );
 
 }
 
+
+function detenerMotor() {
+
+    if (intervaloPrincipal) {
+
+        clearInterval(intervaloPrincipal);
+
+        intervaloPrincipal = null;
+    }
+}
+
+
+function cicloPrincipal() {
+
+    revisarSistema();
+
+    actualizarInterfaz();
+
+    guardarDatos();
+
+}
+
+
 /* ============================================================
-MONITOR
-============================================================ */
+   REVISIÓN
+   ============================================================ */
+
+function revisarSistema() {
+
+    estadisticas.revisiones++;
+
+    sistema.ultimaRevision =
+        obtenerHora();
+
+
+    revisarEnergia();
+
+    revisarEstabilidad();
+
+    revisarErrores();
+
+
+    if (sistema.estabilidad < 30) {
+
+        sistema.prioridad = "ALTA";
+
+    } else if (sistema.estabilidad < 60) {
+
+        sistema.prioridad = "MEDIA";
+
+    } else {
+
+        sistema.prioridad = "BAJA";
+    }
+
+
+    registrarRevision({
+        energia: sistema.energia,
+        estabilidad: sistema.estabilidad,
+        errores: sistema.errores
+    });
+
+
+    registrarEvento(
+        "REVISION",
+        "Revisión automática completada."
+    );
+}
+
+
+/* ============================================================
+   ENERGÍA
+   ============================================================ */
 
 function revisarEnergia() {
 
-```
-let consumo = 0;
+    if (sistema.energia > 0) {
+
+        sistema.energia =
+            Math.max(
+                0,
+                sistema.energia - 1
+            );
+    }
 
 
-/* El consumo depende de la carga */
+    if (sistema.energia < 20) {
 
-if (sistema.cpuUso > 80) {
-
-    consumo += 2;
-
-}
-
-else if (sistema.cpuUso > 50) {
-
-    consumo += 1;
-
-}
-
-
-if (sistema.tareas > 7) {
-
-    consumo += 1;
-
-}
-
-
-if (sistema.modo === "AHORRO") {
-
-    consumo = Math.max(
-        0,
-        consumo - 1
-    );
-
-}
-
-
-if (sistema.modoSeguro) {
-
-    consumo = Math.max(
-        0,
-        consumo - 1
-    );
-
-}
-
-
-/* Consumo mínimo ocasional */
-
-if (consumo === 0 && Math.random() < 0.35) {
-
-    consumo = 1;
-
-}
-
-
-sistema.energia = limitar(
-
-    sistema.energia - consumo,
-
-    CONFIG.energiaMinima,
-
-    CONFIG.energiaMaxima
-
-);
-```
-
-}
-
-/* ============================================================
-MONITOR DE CPU Y TAREAS
-============================================================ */
-
-function revisarCarga() {
-
-```
-const variacionCPU =
-    Math.floor(Math.random() * 31) - 15;
-
-
-sistema.cpuUso = limitar(
-
-    sistema.cpuUso + variacionCPU,
-
-    5,
-
-    100
-
-);
-
-
-/* Las tareas dependen parcialmente de CPU */
-
-let tareasBase =
-    Math.floor(
-        sistema.cpuUso / 12
-    );
-
-
-const variacionTareas =
-    Math.floor(Math.random() * 3) - 1;
-
-
-sistema.tareas = limitar(
-
-    tareasBase + variacionTareas,
-
-    0,
-
-    10
-
-);
-
-
-/* Modo ahorro */
-
-if (sistema.modo === "AHORRO") {
-
-    sistema.cpuUso =
-        Math.min(
-            sistema.cpuUso,
-            55
+        registrarEvento(
+            "WARNING",
+            "Nivel de energía bajo."
         );
 
-}
-
-
-/* Modo seguro */
-
-if (sistema.modoSeguro) {
-
-    sistema.cpuUso =
-        Math.min(
-            sistema.cpuUso,
-            45
+        escribirTerminal(
+            "[WARNING] ENERGÍA BAJA",
+            "warning"
         );
 
-    sistema.tareas =
-        Math.min(
-            sistema.tareas,
-            5
-        );
 
-}
-```
+        if (
+            sistema.modo === "AUTOMATICO" &&
+            configuracion.permisos.optimizacion
+        ) {
 
+            solicitarAccion("AHORRO_ENERGIA");
+        }
+    }
 }
+
 
 /* ============================================================
-DETECCIÓN DE ERRORES
-============================================================ */
-
-function revisarErrores() {
-
-```
-let probabilidad =
-    CONFIG.probabilidadError;
-
-
-if (sistema.cpuUso > 85) {
-
-    probabilidad += 0.06;
-
-}
-
-
-if (sistema.estabilidad < 60) {
-
-    probabilidad += 0.04;
-
-}
-
-
-if (Math.random() < probabilidad) {
-
-    sistema.errores++;
-
-    estadisticas.erroresDetectados++;
-
-
-    registrar(
-
-        "ERROR",
-
-        "Anomalía detectada durante la monitorización."
-
-    );
-
-}
-```
-
-}
-
-/* ============================================================
-ESTABILIDAD
-============================================================ */
+   ESTABILIDAD
+   ============================================================ */
 
 function revisarEstabilidad() {
 
-```
-let nuevaEstabilidad = 100;
-
-
-nuevaEstabilidad -=
-    sistema.errores * 5;
-
-
-if (sistema.cpuUso > 90) {
-
-    nuevaEstabilidad -= 10;
-
-}
-
-else if (sistema.cpuUso > 75) {
-
-    nuevaEstabilidad -= 5;
-
-}
-
-
-if (sistema.energia < 20) {
-
-    nuevaEstabilidad -= 10;
-
-}
-
-
-if (sistema.modo === "EMERGENCIA") {
-
-    nuevaEstabilidad = 100;
-
-}
-
-
-sistema.estabilidad = limitar(
-
-    nuevaEstabilidad,
-
-    0,
-
-    100
-
-);
-```
-
-}
-
-/* ============================================================
-MONITOR PRINCIPAL
-============================================================ */
-
-function monitor() {
-
-```
-revisarCarga();
-
-revisarEnergia();
-
-revisarErrores();
-
-revisarEstabilidad();
-
-
-sistema.ultimaRevision =
-    obtenerHora();
-
-
-sistema.ciclos++;
-
-estadisticas.revisiones++;
-
-
-registrar(
-
-    "ANALISIS",
-
-    "Revisión #" +
-    sistema.ciclos +
-    " completada."
-
-);
-
-
-guardarEstado();
-```
-
-}
-
-/* ============================================================
-DIAGNÓSTICO
-============================================================ */
-
-function obtenerDiagnostico() {
-
-```
-if (sistema.errores >= 10) {
-
-    return "Sistema crítico";
-
-}
-
-
-if (sistema.modo === "EMERGENCIA") {
-
-    return "Protocolo de emergencia activo";
-
-}
-
-
-if (sistema.energia < 20) {
-
-    return "Energía baja";
-
-}
-
-
-if (sistema.estabilidad < 50) {
-
-    return "Estabilidad comprometida";
-
-}
-
-
-if (sistema.cpuUso > 85) {
-
-    return "Carga elevada";
-
-}
-
-
-if (sistema.tareas > 8) {
-
-    return "Exceso de tareas";
-
-}
-
-
-return "Funcionamiento normal";
-```
-
-}
-
-/* ============================================================
-ANALIZADOR
-============================================================ */
-
-function analizar() {
-
-```
-/* Prioridad */
-
-if (sistema.energia < 20) {
-
-    sistema.prioridad = "CRÍTICA";
-
-}
-
-else if (
-    sistema.errores >= 5 ||
-    sistema.estabilidad < 50
-) {
-
-    sistema.prioridad = "ALTA";
-
-}
-
-else if (
-    sistema.energia < 60 ||
-    sistema.cpuUso > 75
-) {
-
-    sistema.prioridad = "MEDIA";
-
-}
-
-else {
-
-    sistema.prioridad = "BAJA";
-
-}
-
-
-sistema.diagnostico =
-    obtenerDiagnostico();
-
-
-actualizarEstadoSistema();
-```
-
-}
-
-/* ============================================================
-DECISOR
-============================================================ */
-
-function decidir() {
-
-```
-sistema.accionPendiente = null;
-
-
-/* Emergencia */
-
-if (sistema.errores >= 10) {
-
-    sistema.accionPendiente =
-        "EMERGENCIA";
-
-    registrar(
-        "DECISION",
-        "Nivel crítico. Activando protocolo de emergencia."
-    );
-
-    return;
-
-}
-
-
-/* Reparación */
-
-if (sistema.errores >= 5) {
-
-    sistema.accionPendiente =
-        "REPARAR";
-
-    registrar(
-        "DECISION",
-        "Múltiples errores detectados. Reparación requerida."
-    );
-
-    return;
-
-}
-
-
-/* Energía */
-
-if (sistema.energia < 20) {
-
-    sistema.accionPendiente =
-        "ACTIVAR_AHORRO";
-
-    registrar(
-        "DECISION",
-        "Energía baja. Activando modo ahorro."
-    );
-
-    return;
-
-}
-
-
-/* Estabilidad */
-
-if (sistema.estabilidad < 50) {
-
-    sistema.accionPendiente =
-        "OPTIMIZAR";
-
-    registrar(
-        "DECISION",
-        "Estabilidad comprometida. Ejecutando optimización."
-    );
-
-    return;
-
-}
-
-
-/* Carga */
-
-if (
-    sistema.cpuUso > 80 ||
-    sistema.tareas > 8
-) {
-
-    sistema.accionPendiente =
-        "REDUCIR_CARGA";
-
-    registrar(
-        "DECISION",
-        "Carga elevada. Reducción de carga recomendada."
-    );
-
-    return;
-
-}
-
-
-/* Sin intervención */
-
-registrar(
-    "DECISION",
-    "No se requiere intervención."
-);
-```
-
-}
-
-/* ============================================================
-MEMORIA: DECISIONES
-============================================================ */
-
-function guardarDecision(accion) {
-
-```
-memoria.decisiones.push({
-
-    hora: obtenerHora(),
-
-    accion: accion
-
-});
-
-
-if (
-    memoria.decisiones.length >
-    CONFIG.capacidadMemoria
-) {
-
-    memoria.decisiones.shift();
-
-}
-```
-
-}
-
-/* ============================================================
-MEMORIA: ESTADOS
-============================================================ */
-
-function guardarEstado() {
-
-```
-memoria.historialEstados.push({
-
-    hora: obtenerHora(),
-
-    energia: sistema.energia,
-
-    estabilidad: sistema.estabilidad,
-
-    errores: sistema.errores,
-
-    cpu: sistema.cpuUso,
-
-    tareas: sistema.tareas,
-
-    modo: sistema.modo
-
-});
-
-
-if (
-    memoria.historialEstados.length >
-    CONFIG.capacidadMemoria
-) {
-
-    memoria.historialEstados.shift();
-
-}
-```
-
-}
-
-/* ============================================================
-APRENDIZAJE
-============================================================ */
-
-function aprender(regla) {
-
-```
-if (!sistema.aprendizajeActivo) {
-
-    return;
-
-}
-
-
-memoria.aprendizajes.push({
-
-    hora: obtenerHora(),
-
-    regla: regla
-
-});
-
-
-estadisticas.aprendizajes++;
-
-
-/* Cada cierto número de aprendizajes
-   aumenta el nivel de IA */
-
-if (
-    estadisticas.aprendizajes % 10 === 0
-) {
-
-    sistema.nivelIA++;
-
-    registrar(
-
-        "APRENDIZAJE",
-
-        "Nivel IA incrementado a " +
-        sistema.nivelIA + "."
-
-    );
-
-}
-
-
-if (
-    memoria.aprendizajes.length >
-    CONFIG.capacidadMemoria
-) {
-
-    memoria.aprendizajes.shift();
-
-}
-```
-
-}
-
-/* ============================================================
-APRENDIZAJE AUTOMÁTICO
-============================================================ */
-
-function analizarAprendizaje() {
-
-```
-if (!sistema.aprendizajeActivo) {
-
-    return;
-
-}
-
-
-if (sistema.cpuUso > 80) {
-
-    aprender(
-        "Las cargas elevadas requieren reducción de tareas."
-    );
-
-}
-
-
-if (sistema.energia < 30) {
-
-    aprender(
-        "La energía baja aumenta la prioridad del modo ahorro."
-    );
-
-}
-
-
-if (sistema.errores > 0) {
-
-    aprender(
-        "Los errores reducen la estabilidad del sistema."
-    );
-
-}
-
-
-if (sistema.estabilidad >= 90) {
-
-    aprender(
-        "Los parámetros estables permiten mantener el modo normal."
-    );
-
-}
-```
-
-}
-
-/* ============================================================
-GUARDAR MEMORIA
-============================================================ */
-
-function guardarMemoria() {
-
-```
-try {
-
-    localStorage.setItem(
-
-        "autocore_memoria",
-
-        JSON.stringify(memoria)
-
-    );
-
-
-    localStorage.setItem(
-
-        "autocore_estadisticas",
-
-        JSON.stringify(estadisticas)
-
-    );
-
-
-    localStorage.setItem(
-
-        "autocore_config",
-
-        JSON.stringify(CONFIG)
-
-    );
-
-}
-
-catch (error) {
-
-    console.warn(
-        "No fue posible guardar la memoria.",
-        error
-    );
-
-}
-```
-
-}
-
-/* ============================================================
-CARGAR MEMORIA
-============================================================ */
-
-function cargarMemoria() {
-
-```
-try {
-
-    const datosMemoria =
-        localStorage.getItem(
-            "autocore_memoria"
-        );
-
-
-    if (datosMemoria) {
-
-        const memoriaGuardada =
-            JSON.parse(datosMemoria);
-
-
-        Object.assign(
-            memoria,
-            memoriaGuardada
-        );
-
+    if (sistema.errores > 0) {
+
+        sistema.estabilidad =
+            Math.max(
+                0,
+                sistema.estabilidad - 1
+            );
+
+    } else if (sistema.estabilidad < 100) {
+
+        sistema.estabilidad =
+            Math.min(
+                100,
+                sistema.estabilidad + 0.5
+            );
     }
 
 
-    const datosEstadisticas =
-        localStorage.getItem(
-            "autocore_estadisticas"
+    if (sistema.estabilidad < 40) {
+
+        registrarEvento(
+            "WARNING",
+            "Estabilidad del sistema reducida."
         );
+    }
 
 
-    if (datosEstadisticas) {
+    if (sistema.estabilidad <= 0) {
 
-        Object.assign(
+        sistema.estado = "INACTIVO";
 
-            estadisticas,
-
-            JSON.parse(
-                datosEstadisticas
-            )
-
+        registrarEvento(
+            "CRITICAL",
+            "Estabilidad crítica."
         );
+    }
+}
+
+
+/* ============================================================
+   ERRORES
+   ============================================================ */
+
+function revisarErrores() {
+
+    if (sistema.errores > 0) {
+
+        estadisticas.erroresDetectados =
+            sistema.errores;
 
     }
 
 }
 
-catch (error) {
-
-    console.warn(
-        "La memoria almacenada no pudo cargarse.",
-        error
-    );
-
-}
-```
-
-}
 
 /* ============================================================
-EJECUTOR
-============================================================ */
+   ANÁLISIS
+   ============================================================ */
 
-function activarAhorro() {
+function analizarSistema(ordenUsuario = false) {
 
-```
-sistema.modo = "AHORRO";
+    estadisticas.decisiones++;
+
+    const nivelEstabilidad =
+        sistema.estabilidad;
+
+    const nivelEnergia =
+        sistema.energia;
+
+    let diagnostico = "";
+    let recomendacion = "";
 
 
-sistema.cpuUso =
-    Math.min(
-        sistema.cpuUso,
-        55
+    if (sistema.errores > 0) {
+
+        diagnostico =
+            "Se detectaron errores pendientes.";
+
+        recomendacion =
+            "Ejecutar diagnóstico y revisar errores.";
+
+    } else if (nivelEstabilidad < 40) {
+
+        diagnostico =
+            "Estabilidad crítica.";
+
+        recomendacion =
+            "Reducir carga del sistema.";
+
+    } else if (nivelEnergia < 20) {
+
+        diagnostico =
+            "Nivel energético bajo.";
+
+        recomendacion =
+            "Activar protocolo de ahorro.";
+
+    } else if (nivelEstabilidad < 70) {
+
+        diagnostico =
+            "Sistema estable con degradación moderada.";
+
+        recomendacion =
+            "Considerar una optimización.";
+
+    } else {
+
+        diagnostico =
+            "Sistema estable.";
+
+        recomendacion =
+            "No se requiere intervención inmediata.";
+    }
+
+
+    sistema.diagnostico = diagnostico;
+
+
+    registrarEvento(
+        "ANALISIS",
+        diagnostico
     );
 
 
-registrar(
-
-    "ACCION",
-
-    "Modo ahorro activado."
-
-);
-
-
-aprender(
-    "El modo ahorro reduce el consumo energético."
-);
-```
-
-}
-
-function repararSistema() {
-
-```
-sistema.errores = 0;
-
-
-sistema.estabilidad =
-    Math.min(
-        100,
-        sistema.estabilidad + 30
+    escribirTerminal(
+        "[ANÁLISIS] " + diagnostico,
+        "system"
     );
 
 
-estadisticas.correcciones++;
+    if (ordenUsuario) {
+
+        escribirTerminal(
+            "[RECOMENDACIÓN] " + recomendacion,
+            "system"
+        );
+
+    }
 
 
-registrar(
-
-    "ACCION",
-
-    "Sistema reparado correctamente."
-
-);
+    actualizarInterfaz();
 
 
-aprender(
-    "La reparación restablece los errores detectados."
-);
-```
+    return {
+        diagnostico,
+        recomendacion
+    };
+}
+
+
+/* ============================================================
+   SISTEMA DE ACCIONES
+   ============================================================ */
+
+function solicitarAccion(tipo) {
+
+    const acciones = {
+
+        DIAGNOSTICO: {
+            nombre: "Ejecutar diagnóstico",
+            motivo: "El operador solicitó un diagnóstico.",
+            permiso: "diagnostico"
+        },
+
+        OPTIMIZACION: {
+            nombre: "Optimizar sistema",
+            motivo: "El operador solicitó una optimización.",
+            permiso: "optimizacion"
+        },
+
+        AHORRO_ENERGIA: {
+            nombre: "Activar ahorro de energía",
+            motivo: "El nivel de energía es bajo.",
+            permiso: "optimizacion"
+        },
+
+        REDUCIR_CARGA: {
+            nombre: "Reducir carga del sistema",
+            motivo: "La estabilidad está por debajo del nivel recomendado.",
+            permiso: "optimizacion"
+        }
+    };
+
+
+    const accion = acciones[tipo];
+
+    if (!accion) {
+        return;
+    }
+
+
+    if (
+        configuracion.modoSeguro &&
+        tipo !== "DIAGNOSTICO"
+    ) {
+
+        registrarEvento(
+            "SECURITY",
+            "Acción bloqueada por modo seguro."
+        );
+
+        escribirTerminal(
+            "[SEGURIDAD] ACCIÓN BLOQUEADA",
+            "warning"
+        );
+
+        return;
+    }
+
+
+    if (
+        !configuracion.permisos[
+            accion.permiso
+        ]
+    ) {
+
+        registrarEvento(
+            "SECURITY",
+            `Permiso insuficiente: ${tipo}`
+        );
+
+        escribirTerminal(
+            "[SEGURIDAD] PERMISO DENEGADO",
+            "warning"
+        );
+
+        return;
+    }
+
+
+    sistema.accionPendiente = {
+
+        id: generarId("ACT"),
+
+        tipo,
+
+        nombre: accion.nombre,
+
+        motivo: accion.motivo,
+
+        creada: new Date().toISOString(),
+
+        origen: "NEXVORA",
+
+        estado: "PENDIENTE"
+    };
+
+
+    registrarEvento(
+        "ACTION",
+        `Acción pendiente: ${accion.nombre}`
+    );
+
+
+    escribirTerminal(
+        `[NEXVORA] ACCIÓN PROPUESTA: ${accion.nombre}`,
+        "system"
+    );
+
+
+    actualizarAccionPendiente();
 
 }
+
+
+/* ============================================================
+   AUTORIZACIÓN
+   ============================================================ */
+
+function autorizarAccion() {
+
+    const accion =
+        sistema.accionPendiente;
+
+    if (!accion) {
+        return;
+    }
+
+
+    accion.estado = "AUTORIZADA";
+
+    accion.autorizadaPor = "USUARIO";
+
+    accion.autorizadaEn =
+        new Date().toISOString();
+
+
+    registrarEvento(
+        "AUTH",
+        `Usuario autorizó: ${accion.nombre}`
+    );
+
+
+    escribirTerminal(
+        `[OPERADOR] AUTORIZACIÓN RECIBIDA: ${accion.nombre}`,
+        "system"
+    );
+
+
+    ejecutarAccion(accion);
+}
+
+
+/* ============================================================
+   EJECUCIÓN
+   ============================================================ */
+
+function ejecutarAccion(accion) {
+
+    if (!accion) {
+        return;
+    }
+
+
+    escribirTerminal(
+        `[NEXVORA] EJECUTANDO: ${accion.nombre}`,
+        "system"
+    );
+
+
+    let resultado = "";
+
+
+    switch (accion.tipo) {
+
+        case "DIAGNOSTICO":
+
+            resultado =
+                ejecutarDiagnostico();
+
+            break;
+
+
+        case "OPTIMIZACION":
+
+            resultado =
+                optimizarSistema();
+
+            break;
+
+
+        case "AHORRO_ENERGIA":
+
+            resultado =
+                activarAhorro();
+
+            break;
+
+
+        case "REDUCIR_CARGA":
+
+            resultado =
+                reducirCarga();
+
+            break;
+
+
+        default:
+
+            resultado =
+                "Acción desconocida.";
+    }
+
+
+    accion.estado = "COMPLETADA";
+
+    accion.resultado = resultado;
+
+    accion.completadaEn =
+        new Date().toISOString();
+
+
+    estadisticas.accionesEjecutadas++;
+
+
+    registrarAccion(
+        accion.nombre,
+        resultado,
+        accion
+    );
+
+
+    registrarEvento(
+        "ACTION",
+        `Acción completada: ${accion.nombre}`
+    );
+
+
+    escribirTerminal(
+        `[NEXVORA] RESULTADO: ${resultado}`,
+        "system"
+    );
+
+
+    sistema.accionPendiente = null;
+
+    actualizarAccionPendiente();
+
+    actualizarInterfaz();
+
+    guardarDatos();
+}
+
+
+/* ============================================================
+   DIAGNÓSTICO
+   ============================================================ */
+
+function ejecutarDiagnostico() {
+
+    const resultado =
+        analizarSistema(false);
+
+
+    return resultado.diagnostico;
+}
+
+
+/* ============================================================
+   OPTIMIZACIÓN
+   ============================================================ */
 
 function optimizarSistema() {
 
-```
-sistema.estabilidad = 100;
+    const anterior =
+        sistema.estabilidad;
 
 
-sistema.cpuUso =
-    Math.max(
-        10,
-        sistema.cpuUso - 20
-    );
-
-
-registrar(
-
-    "ACCION",
-
-    "Optimización completada."
-
-);
-
-
-aprender(
-    "La optimización mejora la estabilidad y reduce la carga."
-);
-```
-
-}
-
-function reducirCarga() {
-
-```
-const cpuAnterior =
-    sistema.cpuUso;
-
-
-sistema.cpuUso =
-    Math.max(
-        10,
-        sistema.cpuUso - 30
-    );
-
-
-sistema.tareas =
-    Math.max(
-        0,
-        sistema.tareas - 3
-    );
-
-
-registrar(
-
-    "ACCION",
-
-    "Carga reducida de " +
-    cpuAnterior +
-    "% a " +
-    sistema.cpuUso +
-    "%."
-
-);
-
-
-aprender(
-    "Reducir carga permite recuperar recursos del sistema."
-);
-```
-
-}
-
-function protocoloEmergencia() {
-
-```
-sistema.modo =
-    "EMERGENCIA";
-
-
-sistema.cpuUso = 10;
-
-sistema.tareas = 0;
-
-sistema.estabilidad = 100;
-
-sistema.errores = 0;
-
-
-registrar(
-
-    "EMERGENCIA",
-
-    "Protocolo de emergencia ejecutado."
-
-);
-
-
-aprender(
-    "El protocolo de emergencia prioriza estabilidad y seguridad."
-);
-```
-
-}
-
-/* ============================================================
-EJECUCIÓN
-============================================================ */
-
-function ejecutar() {
-
-```
-if (!sistema.accionPendiente) {
-
-    return;
-
-}
-
-
-const accion =
-    sistema.accionPendiente;
-
-
-guardarDecision(accion);
-
-
-switch (accion) {
-
-    case "ACTIVAR_AHORRO":
-
-        activarAhorro();
-
-        break;
-
-
-    case "REPARAR":
-
-        repararSistema();
-
-        break;
-
-
-    case "OPTIMIZAR":
-
-        optimizarSistema();
-
-        break;
-
-
-    case "REDUCIR_CARGA":
-
-        reducirCarga();
-
-        break;
-
-
-    case "EMERGENCIA":
-
-        protocoloEmergencia();
-
-        break;
-
-}
-
-
-estadisticas.decisiones++;
-
-
-sistema.accionPendiente = null;
-```
-
-}
-
-/* ============================================================
-FINALIZAR TAREAS
-============================================================ */
-
-function procesarTareas() {
-
-```
-if (sistema.tareas <= 0) {
-
-    return;
-
-}
-
-
-if (Math.random() < 0.30) {
-
-    sistema.tareas =
-        Math.max(
-            0,
-            sistema.tareas - 1
+    sistema.estabilidad =
+        Math.min(
+            100,
+            sistema.estabilidad + 10
         );
 
 
-    estadisticas.tareasCompletadas++;
+    sistema.cpuUso =
+        Math.max(
+            0,
+            sistema.cpuUso - 10
+        );
 
-    memoria.tareasCompletadas =
-        estadisticas.tareasCompletadas;
 
-
-    registrar(
-
-        "ACCION",
-
-        "Tarea completada automáticamente."
-
+    registrarCambio(
+        "estabilidad",
+        anterior,
+        sistema.estabilidad,
+        "NEXVORA"
     );
 
-}
-```
 
+    return "Optimización completada.";
 }
+
 
 /* ============================================================
-EFICIENCIA
-============================================================ */
+   AHORRO DE ENERGÍA
+   ============================================================ */
 
-function calcularEficiencia() {
+function activarAhorro() {
 
-```
-let eficiencia = 100;
-
-
-eficiencia -=
-    sistema.errores * 4;
+    const anterior =
+        sistema.energia;
 
 
-eficiencia -=
-    Math.max(
-        0,
-        sistema.cpuUso - 70
-    ) * 0.2;
+    sistema.energia =
+        Math.min(
+            100,
+            sistema.energia + 5
+        );
 
 
-eficiencia -=
-    Math.max(
-        0,
-        70 - sistema.estabilidad
-    ) * 0.3;
-
-
-return Math.round(
-    limitar(
-        eficiencia,
-        0,
-        100
-    )
-);
-```
-
-}
-
-/* ============================================================
-MEMORIA UTILIZADA
-============================================================ */
-
-function calcularMemoriaUso() {
-
-```
-const total =
-
-    memoria.eventos.length +
-
-    memoria.decisiones.length +
-
-    memoria.aprendizajes.length +
-
-    memoria.historialEstados.length;
-
-
-sistema.memoriaUso =
-    limitar(
-
-        Math.round(
-            (total /
-                (CONFIG.capacidadMemoria * 4)
-            ) * 100
-        ),
-
-        0,
-
-        100
-
+    registrarCambio(
+        "energia",
+        anterior,
+        sistema.energia,
+        "NEXVORA"
     );
-```
+
+
+    return "Modo ahorro activado.";
+}
+
+
+/* ============================================================
+   REDUCIR CARGA
+   ============================================================ */
+
+function reducirCarga() {
+
+    const anterior =
+        sistema.cpuUso;
+
+
+    sistema.cpuUso =
+        Math.max(
+            0,
+            sistema.cpuUso - 20
+        );
+
+
+    sistema.estabilidad =
+        Math.min(
+            100,
+            sistema.estabilidad + 5
+        );
+
+
+    registrarCambio(
+        "cpuUso",
+        anterior,
+        sistema.cpuUso,
+        "NEXVORA"
+    );
+
+
+    return "Carga del sistema reducida.";
+}
+
+
+/* ============================================================
+   CANCELAR ACCIÓN
+   ============================================================ */
+
+function cancelarAccion() {
+
+    if (!sistema.accionPendiente) {
+        return;
+    }
+
+
+    const nombre =
+        sistema.accionPendiente.nombre;
+
+
+    registrarEvento(
+        "ACTION",
+        `Acción cancelada por el usuario: ${nombre}`
+    );
+
+
+    escribirTerminal(
+        `[OPERADOR] ACCIÓN CANCELADA: ${nombre}`,
+        "warning"
+    );
+
+
+    sistema.accionPendiente = null;
+
+    actualizarAccionPendiente();
 
 }
 
+
 /* ============================================================
-ACTUALIZACIÓN DE UI
-============================================================ */
+   MOSTRAR ACCIÓN PENDIENTE
+   ============================================================ */
 
-function actualizarUI() {
-
-```
-calcularMemoriaUso();
-
-
-const eficiencia =
-    calcularEficiencia();
-
-
-/* Estado */
-
-actualizarTexto(
-    "system-status",
-    sistema.estado
-);
-
-
-actualizarTexto(
-    "estadoGeneral",
-    sistema.estado
-);
-
-
-actualizarTexto(
-    "estadoSistema",
-    sistema.estado
-);
-
-
-/* Modo */
-
-actualizarTexto(
-    "modoSistema",
-    sistema.modo
-);
-
-
-actualizarTexto(
-    "modoActual",
-    sistema.modo
-);
-
-
-/* Energía */
-
-actualizarTexto(
-    "energiaActual",
-    sistema.energia + "%"
-);
-
-
-actualizarTexto(
-    "energiaGeneral",
-    sistema.energia + "%"
-);
-
-
-/* Estabilidad */
-
-actualizarTexto(
-    "estabilidad",
-    sistema.estabilidad + "%"
-);
-
-
-actualizarTexto(
-    "estabilidadActual",
-    sistema.estabilidad + "%"
-);
-
-
-actualizarTexto(
-    "enginePercentage",
-    sistema.estabilidad + "%"
-);
-
-
-/* Errores */
-
-actualizarTexto(
-    "erroresActuales",
-    sistema.errores
-);
-
-
-/* CPU */
-
-actualizarTexto(
-    "cpuUso",
-    sistema.cpuUso + "%"
-);
-
-
-actualizarTexto(
-    "cpuActual",
-    sistema.cpuUso + "%"
-);
-
-
-/* Tareas */
-
-actualizarTexto(
-    "tareasGeneral",
-    sistema.tareas
-);
-
-
-actualizarTexto(
-    "tareasActuales",
-    sistema.tareas
-);
-
-
-/* Prioridad */
-
-actualizarTexto(
-    "prioridadGeneral",
-    sistema.prioridad
-);
-
-
-actualizarTexto(
-    "prioridadActual",
-    sistema.prioridad
-);
-
-
-/* Diagnóstico */
-
-actualizarTexto(
-    "diagnosticoGeneral",
-    sistema.diagnostico
-);
-
-
-/* Nivel IA */
-
-actualizarTexto(
-    "nivelIA",
-    sistema.nivelIA
-);
-
-
-actualizarTexto(
-    "nivelIAActual",
-    sistema.nivelIA
-);
-
-
-actualizarTexto(
-    "sidebarNivelIA",
-    sistema.nivelIA
-);
-
-
-actualizarTexto(
-    "nivelIAEstadistica",
-    sistema.nivelIA
-);
-
-
-/* Última revisión */
-
-actualizarTexto(
-    "ultimaRevision",
-    sistema.ultimaRevision
-);
-
-
-actualizarTexto(
-    "footerRevision",
-    sistema.ultimaRevision
-);
-
-
-/* Acción */
-
-actualizarTexto(
-
-    "accionPendiente",
-
-    sistema.accionPendiente
-        ? sistema.accionPendiente
-        : "SIN ACCIÓN PENDIENTE"
-
-);
-
-
-/* Estadísticas */
-
-actualizarTexto(
-    "totalRevisiones",
-    estadisticas.revisiones
-);
-
-
-actualizarTexto(
-    "totalDecisiones",
-    estadisticas.decisiones
-);
-
-
-actualizarTexto(
-    "totalErrores",
-    estadisticas.erroresDetectados
-);
-
-
-actualizarTexto(
-    "totalCorrecciones",
-    estadisticas.correcciones
-);
-
-
-actualizarTexto(
-    "tareasCompletadas",
-    estadisticas.tareasCompletadas
-);
-
-
-actualizarTexto(
-    "aprendizajes",
-    estadisticas.aprendizajes
-);
-
-
-actualizarTexto(
-    "eficiencia",
-    eficiencia + "%"
-);
-
-
-actualizarTexto(
-    "eficienciaTexto",
-    eficiencia + "%"
-);
-
-
-/* Memoria */
-
-actualizarTexto(
-    "memoriaUso",
-    sistema.memoriaUso + "%"
-);
-
-
-/* Barras */
-
-actualizarBarra(
-    "estabilidadBarra",
-    sistema.estabilidad
-);
-
-
-actualizarBarra(
-    "memoriaBarra",
-    sistema.memoriaUso
-);
-
-
-actualizarBarra(
-    "barraEficiencia",
-    eficiencia
-);
-
-
-actualizarBarra(
-    "coreProgressBar",
-    sistema.estabilidad
-);
-
-
-/* Estado de aprendizaje */
-
-actualizarTexto(
-
-    "aprendizajeEstado",
-
-    sistema.aprendiza
+function actualizarAccionPendiente
